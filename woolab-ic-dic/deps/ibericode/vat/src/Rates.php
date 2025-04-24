@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use KybernautIcDicDeps\Ibericode\Vat\Clients\ClientException;
 use KybernautIcDicDeps\Ibericode\Vat\Clients\IbericodeVatRatesClient;
 use KybernautIcDicDeps\Ibericode\Vat\Clients\Client;
-/** @internal */
 class Rates
 {
     public const RATE_STANDARD = 'standard';
@@ -38,31 +37,31 @@ class Rates
         $this->storagePath = $storagePath;
         $this->client = $client;
     }
-    private function load() : void
+    private function load(): void
     {
-        if (\count($this->rates) > 0) {
+        if (count($this->rates) > 0) {
             return;
         }
         if ($this->storagePath !== '' && \is_file($this->storagePath)) {
             $this->loadFromFile();
             // bail early if file is still valid
             // TODO: Store timestamp in file, so we're safe from fs modifications
-            if (\filemtime($this->storagePath) > \time() - $this->refreshInterval) {
+            if (filemtime($this->storagePath) > time() - $this->refreshInterval) {
                 return;
             }
         }
         $this->loadFromRemote();
     }
-    private function loadFromFile() : void
+    private function loadFromFile(): void
     {
-        $contents = \file_get_contents($this->storagePath);
-        $data = \unserialize($contents, ['allowed_classes' => [Period::class, DateTimeImmutable::class]]);
-        if (\false === \is_array($data)) {
+        $contents = file_get_contents($this->storagePath);
+        $data = unserialize($contents, ['allowed_classes' => [Period::class, DateTimeImmutable::class]]);
+        if (\false === is_array($data)) {
             throw new Exception("Unserializable file content");
         }
         $this->rates = $data;
     }
-    private function loadFromRemote() : void
+    private function loadFromRemote(): void
     {
         try {
             $this->client = $this->client ?: new IbericodeVatRatesClient();
@@ -70,23 +69,23 @@ class Rates
         } catch (ClientException $e) {
             // this property could have been populated from the local filesystem at this stage
             // this ensures the application using this package keeps on running even if the VAT rates service is down
-            if (\count($this->rates) > 0) {
+            if (count($this->rates) > 0) {
                 return;
             }
             throw $e;
         }
         // sort periods by DateTime so that later periods come first
         foreach ($this->rates as $country => $periods) {
-            \usort($this->rates[$country], function (Period $period1, Period $period2) {
-                return $period1->getEffectiveFrom() > $period2->getEffectiveFrom() ? -1 : 1;
+            usort($this->rates[$country], function (Period $period1, Period $period2) {
+                return ($period1->getEffectiveFrom() > $period2->getEffectiveFrom()) ? -1 : 1;
             });
         }
         // update local file with updated rates
         if ($this->storagePath !== '') {
-            \file_put_contents($this->storagePath, \serialize($this->rates));
+            file_put_contents($this->storagePath, serialize($this->rates));
         }
     }
-    private function resolvePeriod(string $countryCode, DateTimeInterface $datetime) : Period
+    private function resolvePeriod(string $countryCode, DateTimeInterface $datetime): Period
     {
         $this->load();
         if (!isset($this->rates[$countryCode])) {
@@ -107,7 +106,7 @@ class Rates
      * @return float
      * @throws \Exception
      */
-    public function getRateForCountry(string $countryCode, string $level = self::RATE_STANDARD) : float
+    public function getRateForCountry(string $countryCode, string $level = self::RATE_STANDARD): float
     {
         $todayMidnight = new \DateTimeImmutable('today midnight');
         return $this->getRateForCountryOnDate($countryCode, $todayMidnight, $level);
@@ -119,7 +118,7 @@ class Rates
      * @return float
      * @throws Exception
      */
-    public function getRateForCountryOnDate(string $countryCode, \DateTimeInterface $datetime, string $level = self::RATE_STANDARD) : float
+    public function getRateForCountryOnDate(string $countryCode, \DateTimeInterface $datetime, string $level = self::RATE_STANDARD): float
     {
         $activePeriod = $this->resolvePeriod($countryCode, $datetime);
         return $activePeriod->getRate($level);

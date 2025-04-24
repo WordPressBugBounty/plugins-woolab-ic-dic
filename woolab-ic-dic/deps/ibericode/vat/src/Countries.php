@@ -10,7 +10,6 @@ use DateTime;
  * This class contains ISO-3166-1-alpha2 country code data, plus a few common helpers for dealing with EU VAT.
  *
  * @package Ibericode\Vat
- * @internal
  */
 class Countries implements \Iterator, \ArrayAccess
 {
@@ -23,14 +22,14 @@ class Countries implements \Iterator, \ArrayAccess
      * @param string $code
      * @return bool
      */
-    public function hasCountryCode(string $code) : bool
+    public function hasCountryCode(string $code): bool
     {
         return $this->offsetExists($code);
     }
     /**
      * @return array
      */
-    public function getCountryCodesInEU() : array
+    public function getCountryCodesInEU(): array
     {
         return ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HU', 'HR', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'];
     }
@@ -38,9 +37,9 @@ class Countries implements \Iterator, \ArrayAccess
      * @param string $code
      * @return bool
      */
-    public function isCountryCodeInEU(string $code) : bool
+    public function isCountryCodeInEU(string $code): bool
     {
-        return \in_array($code, $this->getCountryCodesInEU(), \true);
+        return in_array($code, $this->getCountryCodesInEU(), \true);
     }
     /**
      * Return the current element
@@ -51,7 +50,7 @@ class Countries implements \Iterator, \ArrayAccess
     #[\ReturnTypeWillChange]
     public function current()
     {
-        return \current($this->data);
+        return current($this->data);
     }
     /**
      * Move forward to next element
@@ -62,7 +61,7 @@ class Countries implements \Iterator, \ArrayAccess
     #[\ReturnTypeWillChange]
     public function next()
     {
-        \next($this->data);
+        next($this->data);
     }
     /**
      * Return the key of the current element
@@ -73,7 +72,7 @@ class Countries implements \Iterator, \ArrayAccess
     #[\ReturnTypeWillChange]
     public function key()
     {
-        return \key($this->data);
+        return key($this->data);
     }
     /**
      * Checks if current position is valid
@@ -85,7 +84,7 @@ class Countries implements \Iterator, \ArrayAccess
     #[\ReturnTypeWillChange]
     public function valid()
     {
-        return \key($this->data) !== null;
+        return key($this->data) !== null;
     }
     /**
      * Rewind the Iterator to the first element
@@ -96,7 +95,7 @@ class Countries implements \Iterator, \ArrayAccess
     #[\ReturnTypeWillChange]
     public function rewind()
     {
-        \reset($this->data);
+        reset($this->data);
     }
     /**
      * @param string $countryCode

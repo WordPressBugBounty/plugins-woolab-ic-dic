@@ -2,7 +2,6 @@
 
 namespace KybernautIcDicDeps\Ibericode\Vat\Clients;
 
-/** @internal */
 interface Client
 {
     /**
@@ -18,5 +17,5 @@ interface Client
      * @return array
      * @throws ClientException
      */
-    public function fetch() : array;
+    public function fetch(): array;
 }

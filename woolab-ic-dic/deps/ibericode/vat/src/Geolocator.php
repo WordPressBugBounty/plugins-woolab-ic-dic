@@ -5,7 +5,6 @@ namespace KybernautIcDicDeps\Ibericode\Vat;
 
 use KybernautIcDicDeps\Ibericode\Vat\Geolocation\IP2C;
 use KybernautIcDicDeps\Ibericode\Vat\Geolocation\IP2Country;
-/** @internal */
 class Geolocator
 {
     private $services = ['ip2c.org' => IP2C::class, 'ip2country.info' => IP2Country::class];
@@ -20,7 +19,7 @@ class Geolocator
         }
         $this->service = new $this->services[$service]();
     }
-    public function locateIpAddress(string $ipAddress) : string
+    public function locateIpAddress(string $ipAddress): string
     {
         if ($ipAddress === '') {
             return '';
