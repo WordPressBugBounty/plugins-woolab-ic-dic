@@ -77,7 +77,7 @@ class Rates
         // sort periods by DateTime so that later periods come first
         foreach ($this->rates as $country => $periods) {
             usort($this->rates[$country], function (Period $period1, Period $period2) {
-                return ($period1->getEffectiveFrom() > $period2->getEffectiveFrom()) ? -1 : 1;
+                return $period1->getEffectiveFrom() > $period2->getEffectiveFrom() ? -1 : 1;
             });
         }
         // update local file with updated rates

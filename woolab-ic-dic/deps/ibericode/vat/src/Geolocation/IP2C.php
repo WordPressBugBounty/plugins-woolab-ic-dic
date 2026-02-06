@@ -34,6 +34,6 @@ class IP2C implements GeolocatorInterface
             return '';
         }
         $parts = explode(';', $response);
-        return ($parts[1] === 'ZZ') ? '' : $parts[1];
+        return $parts[1] === 'ZZ' ? '' : $parts[1];
     }
 }
