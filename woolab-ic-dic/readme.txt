@@ -2,8 +2,8 @@
 Contributors: vyskoczilova
 Tags: DIČ, IČO, IČ, IČ DPH, VAT number
 Requires at least: 4.6
-Tested up to: 6.8
-Stable tag: 1.10.2
+Tested up to: 6.9
+Stable tag: 1.10.3
 Requires PHP: 7.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -127,6 +127,11 @@ Either post it on [GitHub](https://github.com/vyskoczilova/kybernaut-ic-dic) or�
 
 
 == Changelog ==
+
+= 1.10.3 (2026-03-18) =
+
+* Fix: "Trying to access array offset on null" error on checkout when `shipping_country` or `ship_to_different_address` POST fields are not set (e.g. when shipping to billing address).
+* Fix: Added missing `isset()` checks in VAT exempt validation for parsed POST data.
 
 = 1.10.2 (2025-11-28) =
 

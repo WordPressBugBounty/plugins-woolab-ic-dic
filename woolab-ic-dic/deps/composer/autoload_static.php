@@ -7,14 +7,14 @@ namespace Composer\Autoload;
 class ComposerStaticInit1a4c58dddfa3f05717e15b82f98b21a1
 {
     public static $prefixLengthsPsr4 = array (
-        'K' => 
+        'K' =>
         array (
             'KybernautIcDicDeps\\Ibericode\\Vat\\' => 33,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'KybernautIcDicDeps\\Ibericode\\Vat\\' => 
+        'KybernautIcDicDeps\\Ibericode\\Vat\\' =>
         array (
             0 => __DIR__ . '/..' . '/ibericode/vat/src',
         ),
