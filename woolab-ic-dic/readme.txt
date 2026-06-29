@@ -2,8 +2,8 @@
 Contributors: vyskoczilova
 Tags: DIČ, IČO, IČ, IČ DPH, VAT number
 Requires at least: 4.6
-Tested up to: 6.9
-Stable tag: 1.10.5
+Tested up to: 7.0
+Stable tag: 1.11.0
 Requires PHP: 7.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -28,7 +28,7 @@ Supports both PHP 7.3+ (soon to be abandoned) & PHP 8.0+.
     * VIES DIČ validation (or just validate the format of values)
 * for EU countries as billing country
     * VIES DIČ validation
-* VAT extempt feature
+* VAT exempt feature
 * adds fields to IČO & DIČ & IČ DPH WooCommerce frontend: Checkout and My Account page
 * allows edits from administration (backend):
   * `Users -> Joe Doe (Edit) -> Billing address of the customer`
@@ -61,7 +61,7 @@ If you want to help, join the [Github](https://github.com/vyskoczilova/kybernaut
 
 == Installation ==
 
-1. Just follow the standard [WordPress plugin installation procedere](http://codex.wordpress.org/Managing_Plugins).
+1. Just follow the standard [WordPress plugin installation procedure](http://codex.wordpress.org/Managing_Plugins).
 1. Go to `WooCommerce->Settings->General` and scroll down for `Kybernaut IČO DIČ options`.
 
 
@@ -127,6 +127,19 @@ Either post it on [GitHub](https://github.com/vyskoczilova/kybernaut-ic-dic) or�
 
 
 == Changelog ==
+
+= 1.11.0 (2026-06-29) =
+
+* Maintenance: Internal code refactoring and added automated tests. No change to checkout behaviour, validation messages, or settings.
+* Fix: The SK-only "VAT reg. no." (IČ DPH) field now shows only for Slovak orders on the admin order edit screen. Two issues were fixed: an off-by-one country comparison (`$country[0]` only checked the first character) in the field definition, and the country-based show/hide script not loading on HPOS order edit screens, which left the field visible on Czech orders.
+* Fix: Fatal error on every page load for logged-in EU B2B customers when VIES was unavailable — `ViesException` was re-thrown from the `init` hook and the `update_order_review` AJAX call; the exception is now caught, logged, and treated as "not exempt" instead.
+* Fix: ARES mismatch notice for Tax ID field incorrectly reported the field as "Business ID".
+* Fix: Leftover debug `get_user_meta()` call appended stray text to the Settings link in the admin notice.
+* Fix: Admin script/style enqueue arguments — `wp_enqueue_style()` received the plugin URL as its dependencies parameter; `admin-edit.js` and `admin.js` shared the same handle so one silently failed to load; version parameter was missing from all admin enqueues.
+* Fix: ARES autofill checkbox setting default changed from the invalid `'false'` to the correct `'no'`.
+* Security: `ajaxAres` endpoint now verifies a nonce and sanitizes the `ico` request parameter.
+* Security: Notice-dismiss AJAX endpoint is restricted to authenticated users with the `manage_woocommerce` capability and now requires a nonce.
+* Security: Raw `$_POST` reads in checkout validation wrapped in `wc_clean( wp_unslash() )`, consistent with the rest of the codebase.
 
 = 1.10.5 (2026-03-25) =
 

@@ -3,7 +3,7 @@
  Plugin Name:			Kybernaut IC DIC
  Plugin URI:			https://kybernaut.cz/pluginy/kybernaut-ic-dic
  Description:			Adds Czech Company & VAT numbers (IČO & DIČ) to WooCommerce billing fields and verifies if data are correct.
- Version:				1.10.5
+ Version:				1.11.0
  Author:				Karolína Vyskočilová
  Author URI:			https://kybernaut.cz
  Text Domain:			woolab-ic-dic
@@ -13,8 +13,8 @@
  Donate link:			https://paypal.me/KarolinaVyskocilova/
  Requires Plugins: 		woocommerce
  WC requires at least:	3.5.0
- WC tested up to:		10.3.5
- Copyright:				© 2016-2025 Karolína Vyskočilová.
+ WC tested up to:		10.9.1
+ Copyright:				© 2016-2026 Karolína Vyskočilová.
  License:				GNU General Public License v3.0
  License URI:			http://www.gnu.org/licenses/gpl-3.0.html
  */
@@ -40,7 +40,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 define( 'WOOLAB_IC_DIC_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 define( 'WOOLAB_IC_DIC_ABSPATH', dirname( __FILE__ ) . '/' );
 define( 'WOOLAB_IC_DIC_URL', plugin_dir_url( __FILE__ ) );
-define( 'WOOLAB_IC_DIC_VERSION', '1.10.4' );
+define( 'WOOLAB_IC_DIC_VERSION', '1.11.0' );
 
 // Check if WooCommerce active
 function woolab_icdic_init() {
@@ -84,6 +84,7 @@ function woolab_icdic_init() {
 		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/admin-notice.php');
 		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/ares.php');
 		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/helpers.php');
+		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/validation.php');
 		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/filters-actions.php');
 		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/settings.php');
 		include_once( WOOLAB_IC_DIC_ABSPATH . 'includes/logger.php');
@@ -139,6 +140,7 @@ function woolab_icdic_enqueue_scripts() {
 		wp_enqueue_script( 'woolab-icdic-public-js', WOOLAB_IC_DIC_URL . 'assets/js/public'.$suffix.'.js', array( 'jquery' ), WOOLAB_IC_DIC_VERSION );
 		wp_localize_script( 'woolab-icdic-public-js', 'woolab', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'woolab_icdic_ares' ),
 			'l18n_not_valid' => __('Business ID is invalid.', 'woolab-ic-dic'),
 			'l18n_error' => __('Unexpected error occurred. Try it again.', 'woolab-ic-dic'),
 			'l18n_ok' => __('Information loaded succesfully from ARES.', 'woolab-ic-dic'),
@@ -147,7 +149,7 @@ function woolab_icdic_enqueue_scripts() {
 			'ares_fill' => woolab_icdic_ares_fill(),
 			'ignore_check_fail' => woolab_icdic_ignore_check_fail(),
 		));
-		if ( apply_filters( 'woolab_icdic_toggle', get_option('woolab_icdic_toggle_switch', 'no') ) === 'yes') {
+		if ( woolab_icdic_toggle_enabled() ) {
 			wp_enqueue_style( 'woolab-icdic-public-css', WOOLAB_IC_DIC_URL . 'assets/css/style.css', null, WOOLAB_IC_DIC_VERSION );
 		}
 	}
@@ -179,6 +181,49 @@ function woolab_icdic_ignore_check_fail() {
 	return apply_filters( 'woolab_icdic_ignore_check_fail', $option );
 }
 
+// NOTE: the four accessors below deliberately do NOT go through
+// woolab_icdic_get_option(). Each preserves its original public filter contract,
+// which differs from the helpers above: the vat_exempt/dic_dicdph filters receive
+// an already-computed bool (and vat_exempt ANDs in wc_tax_enabled / dic_dicdph is
+// an inverted "disable" option), while the toggle/country filters receive the raw
+// 'yes'/'no' string and are normalized with `!== 'no'` afterwards. Routing any of
+// these through woolab_icdic_get_option() would change what the filter sees or the
+// truthiness — do not "consolidate" them into it.
+
+/**
+ * Whether automatic VAT exemption for valid intra-EU B2B is enabled.
+ * Filter receives (and returns) a bool, matching the original call sites.
+ */
+function woolab_icdic_vat_exempt_enabled() {
+	return apply_filters( 'woolab_icdic_vat_exempt_enabled', ( get_option( 'woolab_icdic_vat_exempt_switch', 'no' ) !== 'no' && wc_tax_enabled() ) );
+}
+
+/**
+ * Whether the SK DIČ ↔ IČ DPH match check is enabled. Stored as an inverted
+ * "disable" option. Filter receives (and returns) a bool.
+ */
+function woolab_icdic_dic_dicdph_match_enabled() {
+	return apply_filters( 'woolab_icdic_enable_dic_dicdph_match_check', get_option( 'woolab_icdic_disable_dic_dicdph_match', 'no' ) !== 'yes' );
+}
+
+/**
+ * Whether the "buying as a company" fields toggle is enabled.
+ * Filter receives (and returns) the raw 'yes'/'no' string; normalization to bool
+ * happens here.
+ */
+function woolab_icdic_toggle_enabled() {
+	return apply_filters( 'woolab_icdic_toggle', get_option( 'woolab_icdic_toggle_switch', 'no' ) ) !== 'no';
+}
+
+/**
+ * Whether the country field is moved above the toggle.
+ * Filter receives (and returns) the raw 'yes'/'no' string; normalization to bool
+ * happens here.
+ */
+function woolab_icdic_country_ontop_enabled() {
+	return apply_filters( 'woolab_icdic_country_ontop', get_option( 'woolab_icdic_country_switch', 'no' ) ) !== 'no';
+}
+
 function woolab_icdic_get_option( $name, $default = 'yes' ) {
 
 	$option = get_option( $name, $default );
@@ -192,31 +237,31 @@ function woolab_icdic_get_option( $name, $default = 'yes' ) {
 
 function woolab_icdic_admin_scripts( $hook ) {
 	$suffix = SCRIPT_DEBUG ? '' : '.min';
-	if ( 'post.php' === $hook  || 'post-new.php' === $hook ) {
-		wp_enqueue_style( 'woolab-ic-dic-admin', WOOLAB_IC_DIC_URL . 'assets/css/admin.css', WOOLAB_IC_DIC_URL );
-		wp_enqueue_script( 'woolab-ic-dic-admin', WOOLAB_IC_DIC_URL . 'assets/js/admin-edit'.$suffix.'.js', array('jquery') );
+
+	// Order edit screen: legacy CPT uses post(-new).php, HPOS uses the
+	// wc-orders admin page (hook 'woocommerce_page_wc-orders'). Without the
+	// HPOS hook the country-based show/hide JS never loads, so the SK-only
+	// "VAT reg. no." field stayed visible on CZ orders under HPOS.
+	if ( 'post.php' === $hook || 'post-new.php' === $hook || 'woocommerce_page_wc-orders' === $hook ) {
+		wp_enqueue_style( 'woolab-ic-dic-admin', WOOLAB_IC_DIC_URL . 'assets/css/admin.css', array(), WOOLAB_IC_DIC_VERSION );
+		wp_enqueue_script( 'woolab-ic-dic-admin-edit', WOOLAB_IC_DIC_URL . 'assets/js/admin-edit'.$suffix.'.js', array('jquery'), WOOLAB_IC_DIC_VERSION );
 	}
 	if ( 'woocommerce_page_wc-settings' === $hook || current_user_can('manage_woocommerce') && get_option( 'woolab_icdic_notice_settings', true ) ) {
-		wp_enqueue_script( 'woolab-ic-dic-admin', WOOLAB_IC_DIC_URL . 'assets/js/admin'.$suffix.'.js', array('jquery') );
+		wp_enqueue_script( 'woolab-ic-dic-admin', WOOLAB_IC_DIC_URL . 'assets/js/admin'.$suffix.'.js', array('jquery'), WOOLAB_IC_DIC_VERSION );
 		wp_localize_script( 'woolab-ic-dic-admin', 'woolab', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
 			'soap' => class_exists('SoapClient'),
+			'dismiss_nonce' => wp_create_nonce( 'woolab_icdic_notice_dismiss' ),
 		));
 	}
 }
 
 function woolab_icdic_ares_ajax(){
-	if ( isset($_REQUEST) ) {
+	check_ajax_referer( 'woolab_icdic_ares', 'nonce' );
 
-		$value = woolab_icdic_ares( $_REQUEST['ico'] );
-		if ( $value ) {
-			echo json_encode( $value );
-		} else {
-			echo null;
-		}
+	$ico = isset( $_REQUEST['ico'] ) ? wc_clean( wp_unslash( $_REQUEST['ico'] ) ) : '';
 
-	}
-	die();
+	wp_send_json( woolab_icdic_ares( $ico ) );
 };
 
 /**

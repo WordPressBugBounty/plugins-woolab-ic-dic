@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'vyskocilova/kybernaut-ic-dic',
-        'pretty_version' => '1.10.5',
-        'version' => '1.10.5.0',
-        'reference' => '49e2f5adb0242462071179a41e37b189722daf6e',
+        'pretty_version' => '1.11.0',
+        'version' => '1.11.0.0',
+        'reference' => '05f89c4f62e820091de072a32d4eabd8e62c32e7',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'vyskocilova/kybernaut-ic-dic' => array(
-            'pretty_version' => '1.10.5',
-            'version' => '1.10.5.0',
-            'reference' => '49e2f5adb0242462071179a41e37b189722daf6e',
+            'pretty_version' => '1.11.0',
+            'version' => '1.11.0.0',
+            'reference' => '05f89c4f62e820091de072a32d4eabd8e62c32e7',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
